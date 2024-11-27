@@ -158,16 +158,6 @@ typedef NS_ENUM(NSInteger, OpenVPNTLSCertProfile);
 @property (nonatomic) OpenVPNTLSCertProfile tlsCertProfile;
 
 /**
- Overrides the list of tls ciphers like the tls-cipher option
- */
-@property (nullable, nonatomic) NSArray<NSString *> *tlsCipherList;
-
-/**
- Overrides the list of TLS 1.3 ciphersuites like the tls-ciphersuites option
- */
-@property (nullable, nonatomic) NSArray<NSString *> *tlsCiphersuitesList;
-
-/**
  Pass custom key/value pairs to OpenVPN server
  */
 @property (nullable, nonatomic) NSDictionary<NSString *, NSString *> *peerInfo;

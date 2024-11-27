@@ -4,7 +4,7 @@
 //               packet encryption, packet authentication, and
 //               packet compression.
 //
-//    Copyright (C) 2012-2020 OpenVPN Inc.
+//    Copyright (C) 2012-2017 OpenVPN Inc.
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License Version 3
@@ -56,6 +56,17 @@ namespace openvpn {
     };
 
     struct ServerList : public std::vector<ServerEntry>
+    {
+    };
+
+    // Added by Dener Araújo - 2020-09-06
+    struct DhcpOptionEntry {
+      std::string type;
+      std::string address;
+    };
+
+    // Added by Dener Araújo - 2020-09-06
+    struct DhcpOptionList : public std::vector<DhcpOptionEntry>
     {
     };
 
@@ -215,7 +226,6 @@ namespace openvpn {
 		const std::string& key_txt = o->get(1, Option::MULTILINE);
 		privateKeyPasswordRequired_ = (
 	            key_txt.find("-----BEGIN RSA PRIVATE KEY-----\nProc-Type: 4,ENCRYPTED\n") != std::string::npos
-	         || key_txt.find("-----BEGIN EC PRIVATE KEY-----\nProc-Type: 4,ENCRYPTED\n") != std::string::npos
 		 || key_txt.find("-----BEGIN ENCRYPTED PRIVATE KEY-----") != std::string::npos
 		);
 	      }
@@ -239,15 +249,6 @@ namespace openvpn {
 	      if (remoteList)
 		profileName_ = remoteList->first_server_host();
 	    }
-
-	  // windows-driver
-	  {
-	    const Option* o = options.get_ptr("windows-driver");
-	    if (o)
-	      {
-		windowsDriver_ = o->get(1, 256);
-	      }
-	  }
 	}
 
 	// friendly name
@@ -293,6 +294,30 @@ namespace openvpn {
 	  }
 	}
 
+    // Added by Dener Araújo - 2020-09-06
+    // dhpc-option
+    {
+      const OptionList::IndexList *dhcpList = options.get_index_ptr("dhcp-option");
+
+      if (dhcpList)
+      {
+        for (OptionList::IndexList::const_iterator i = dhcpList->begin(); i != dhcpList->end(); ++i)
+        {
+          const Option& o = options[*i];
+          o.touch();
+
+          const std::string arg1 = o.get_optional(1, 256);
+          const std::string arg2 = o.get_optional(2, 256);
+
+          DhcpOptionEntry dhcp;
+          dhcp.type = arg1;
+          dhcp.address = arg2;
+
+          dhcpOptionList_.push_back(std::move(dhcp));
+        }
+      }
+    }
+
 	// protocol configuration
 	{
 	  protoConfig.reset(new ProtoContext::Config());
@@ -302,6 +327,9 @@ namespace openvpn {
 	}
 
 	unsigned int lflags = SSLConfigAPI::LF_PARSE_MODE;
+
+	if (options.exists("allow-name-constraints"))
+	  lflags |= SSLConfigAPI::LF_ALLOW_NAME_CONSTRAINTS;
 
 	// ssl lib configuration
 	try {
@@ -442,8 +470,10 @@ namespace openvpn {
 
     // return first remote directive in config
     const RemoteItem& firstRemoteListItem() const { return firstRemoteListItem_; }
-
-    const std::string& windowsDriver() const { return windowsDriver_; }
+      
+    // Added by Dener Araújo - 2020-09-06
+    // dhpc-option
+    const DhcpOptionList& dhcpOptionList() const { return dhcpOptionList_; }
 
     std::string to_string() const
     {
@@ -533,6 +563,18 @@ namespace openvpn {
 
       root["mode"] = Json::Value("client");
       root["dev"] = Json::Value(dev);
+      // Added by Dener Araújo - 2020-09-06
+      root["dhcp-options"] = Json::Value(Json::arrayValue);
+      for (size_t i = 0; i < dhcpOptionList_.size(); i++)
+      {
+    const DhcpOptionEntry& item = dhcpOptionList_[i];
+
+    Json::Value el = Json::Value(Json::objectValue);
+    el["type"] = Json::Value(item.type);
+    el["address"] = Json::Value(item.address);
+
+    root["dhcp-options"].append(el);
+      }
       root["dev-type"] = Json::Value(protoConfig->layer.dev_type());
       root["remotes"] = Json::Value(Json::arrayValue);
       for (size_t i = 0; i < remoteList->size(); i++)
@@ -725,7 +767,7 @@ namespace openvpn {
     ProtoContext::Config::Ptr protoConfig;
     SSLLib::SSLAPI::Config::Ptr sslConfig;
     std::string dev;
-    std::string windowsDriver_;
+    DhcpOptionList dhcpOptionList_; // Added by Dener Araújo - 2020-09-06
   };
 }
 

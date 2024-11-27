@@ -4,7 +4,7 @@
 //               packet encryption, packet authentication, and
 //               packet compression.
 //
-//    Copyright (C) 2012-2020 OpenVPN Inc.
+//    Copyright (C) 2012-2017 OpenVPN Inc.
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License Version 3
@@ -56,8 +56,7 @@ namespace openvpn {
 	V6_SIZE = IPv6::Addr::SIZE,
       };
 
-      template <typename TITLE>
-      Addr(const Addr& other, const TITLE& title, const Version required_version)
+      Addr(const Addr& other, const char *title = nullptr, Version required_version = UNSPEC)
 	: ver(other.ver)
       {
 	other.validate_version(title, required_version);
@@ -74,86 +73,47 @@ namespace openvpn {
 	  }
       }
 
-      template <typename TITLE>
-      Addr(const Addr& other, const TITLE& title)
-	: Addr(other, title, UNSPEC)
-      {
-      }
-
-      Addr(const Addr& other)
-	: Addr(other, nullptr, UNSPEC)
-      {
-      }
-
-      template <typename TITLE>
-      Addr(const std::string& ipstr, const TITLE& title, const Version required_version)
+      Addr(const std::string& ipstr, const char *title = nullptr, Version required_version = UNSPEC)
 	: Addr(from_string(ipstr, title, required_version))
       {
       }
 
-      template <typename TITLE>
-      Addr(const std::string& ipstr, const TITLE& title)
-	: Addr(from_string(ipstr, title, UNSPEC))
+#ifndef SWIGPYTHON
+      // When calling IP:Addr with None as the second parameter, Swig will
+      // always pick this function and complain about not being able to convert
+      // a null pointer to a const std::string reference. Hide this function, so
+      // swig is forced to take the const char* variant of this function instead
+      Addr(const std::string& ipstr, const std::string& title, Version required_version = UNSPEC)
+	: Addr(from_string(ipstr, title.c_str(), required_version))
       {
       }
+#endif
 
-      Addr(const std::string& ipstr)
-	: Addr(from_string(ipstr, nullptr, UNSPEC))
+      void validate_version(const char *title, Version required_version) const
       {
+	if (required_version != UNSPEC && required_version != ver)
+	  throw ip_exception(internal::format_error(to_string(), title, version_string_static(required_version), "wrong IP version"));
       }
 
-      template <typename TITLE>
-      static Addr from_string(const std::string& ipstr,
-			      const TITLE& title,
-			      const Version required_version)
+#ifndef SWIGPYTHON
+      void validate_version(const std::string& title, Version required_version) const
       {
-	openvpn_io::error_code ec;
-	openvpn_io::ip::address a = openvpn_io::ip::make_address(ipstr, ec);
-	if (ec)
-	  throw ip_exception(internal::format_error(ipstr, title, "", ec));
-	const Addr ret = from_asio(a);
-	if (required_version != UNSPEC && required_version != ret.ver)
-	  throw ip_exception(internal::format_error(ipstr, title, version_string_static(required_version), "wrong IP version"));
-	return ret;
+	validate_version(title.c_str(), required_version);
       }
+#endif
 
-      template <typename TITLE>
-      static Addr from_string(const std::string& ipstr, const TITLE& title)
-      {
-	return from_string(ipstr, title, UNSPEC);
-      }
-
-      static Addr from_string(const std::string& ipstr)
-      {
-	return from_string(ipstr, nullptr, UNSPEC);
-      }
-
-      template <typename TITLE>
-      static std::string validate(const std::string& ipstr,
-				  const TITLE& title,
-				  const Version required_version)
+      static std::string validate(const std::string& ipstr, const char *title = nullptr, Version required_version = UNSPEC)
       {
 	Addr a = from_string(ipstr, title, required_version);
 	return a.to_string();
       }
 
-      template <typename TITLE>
-      static std::string validate(const std::string& ipstr, const TITLE& title)
+#ifndef SWIGPYTHON
+      static std::string validate(const std::string& ipstr, const std::string& title, Version required_version = UNSPEC)
       {
-	return validate(ipstr, title, UNSPEC);
+	return validate(ipstr, title.c_str(), required_version);
       }
-
-      static std::string validate(const std::string& ipstr)
-      {
-	return validate(ipstr, nullptr, UNSPEC);
-      }
-
-      template <typename TITLE>
-      void validate_version(const TITLE& title, const Version required_version) const
-      {
-	if (required_version != UNSPEC && required_version != ver)
-	  throw ip_exception(internal::format_error(to_string(), title, version_string_static(required_version), "wrong IP version"));
-      }
+#endif
 
       static bool is_valid(const std::string& ipstr)
       {
@@ -174,6 +134,18 @@ namespace openvpn {
 	  openvpn_io::ip::make_address(ipstr, ec);
 	  return !ec;
 	}
+      }
+
+      static Addr from_string(const std::string& ipstr, const char *title = nullptr, Version required_version = UNSPEC)
+      {
+	openvpn_io::error_code ec;
+	openvpn_io::ip::address a = openvpn_io::ip::make_address(ipstr, ec);
+	if (ec)
+	  throw ip_exception(internal::format_error(ipstr, title, "", ec));
+	const Addr ret = from_asio(a);
+	if (required_version != UNSPEC && required_version != ret.ver)
+	  throw ip_exception(internal::format_error(ipstr, title, version_string_static(required_version), "wrong IP version"));
+	return ret;
       }
 
       static Addr from_hex(Version v, const std::string& s)
@@ -210,32 +182,12 @@ namespace openvpn {
 	  throw ip_exception("address is not IPv4");
       }
 
-      IPv4::Addr to_ipv4_zero() const
-      {
-	if (ver == V4)
-	  return u.v4;
-	else if (ver == UNSPEC)
-	  return IPv4::Addr::from_zero();
-	else
-	  throw ip_exception("address is not IPv4 (zero)");
-      }
-
       const IPv6::Addr& to_ipv6() const
       {
 	if (ver == V6)
 	  return u.v6;
 	else
 	  throw ip_exception("address is not IPv6");
-      }
-
-      IPv6::Addr to_ipv6_zero() const
-      {
-	if (ver == V6)
-	  return u.v6;
-	else if (ver == UNSPEC)
-	  return IPv6::Addr::from_zero();
-	else
-	  throw ip_exception("address is not IPv6 (zero)");
       }
 
       const IPv4::Addr& to_ipv4_nocheck() const
@@ -952,8 +904,17 @@ namespace openvpn {
 
       Addr& operator=(const Addr& other)
       {
-	ver = other.ver;
-	u = other.u;
+	switch (ver = other.ver)
+	  {
+	  case V4:
+	    u.v4 = other.u.v4;
+	    break;
+	  case V6:
+	    u.v6 = other.u.v6;
+	    break;
+	  default:
+	    break;
+	  }
 	return *this;
       }
 
@@ -1015,7 +976,7 @@ namespace openvpn {
       union {
 	IPv4::Addr v4;
 	IPv6::Addr v6;
-      } u {};
+      } u;
 
       Version ver;
     };

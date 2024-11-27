@@ -371,7 +371,7 @@ namespace detail
             return;
           }
 
-          /* fall-through */ default:
+          default:
 
           if (iter == end)
             break;
@@ -454,26 +454,12 @@ namespace detail
         function, this_handler->handler_);
   }
 
-  template <typename Protocol, typename Executor>
-  class initiate_async_range_connect
+  struct initiate_async_range_connect
   {
-  public:
-    typedef Executor executor_type;
-
-    explicit initiate_async_range_connect(basic_socket<Protocol, Executor>& s)
-      : socket_(s)
-    {
-    }
-
-    executor_type get_executor() const ASIO_NOEXCEPT
-    {
-      return socket_.get_executor();
-    }
-
-    template <typename RangeConnectHandler,
-        typename EndpointSequence, typename ConnectCondition>
+    template <typename RangeConnectHandler, typename Protocol,
+        typename Executor, typename EndpointSequence, typename ConnectCondition>
     void operator()(ASIO_MOVE_ARG(RangeConnectHandler) handler,
-        const EndpointSequence& endpoints,
+        basic_socket<Protocol, Executor>* s, const EndpointSequence& endpoints,
         const ConnectCondition& connect_condition) const
     {
       // If you get an error on the following line it means that your
@@ -484,12 +470,9 @@ namespace detail
 
       non_const_lvalue<RangeConnectHandler> handler2(handler);
       range_connect_op<Protocol, Executor, EndpointSequence, ConnectCondition,
-        typename decay<RangeConnectHandler>::type>(socket_, endpoints,
+        typename decay<RangeConnectHandler>::type>(*s, endpoints,
           connect_condition, handler2.value)(asio::error_code(), 1);
     }
-
-  private:
-    basic_socket<Protocol, Executor>& socket_;
   };
 
   template <typename Protocol, typename Executor, typename Iterator,
@@ -558,7 +541,7 @@ namespace detail
             return;
           }
 
-          /* fall-through */ default:
+          default:
 
           if (iter_ == end_)
             break;
@@ -640,28 +623,13 @@ namespace detail
         function, this_handler->handler_);
   }
 
-  template <typename Protocol, typename Executor>
-  class initiate_async_iterator_connect
+  struct initiate_async_iterator_connect
   {
-  public:
-    typedef Executor executor_type;
-
-    explicit initiate_async_iterator_connect(
-        basic_socket<Protocol, Executor>& s)
-      : socket_(s)
-    {
-    }
-
-    executor_type get_executor() const ASIO_NOEXCEPT
-    {
-      return socket_.get_executor();
-    }
-
-    template <typename IteratorConnectHandler,
-        typename Iterator, typename ConnectCondition>
+    template <typename IteratorConnectHandler, typename Protocol,
+        typename Executor, typename Iterator, typename ConnectCondition>
     void operator()(ASIO_MOVE_ARG(IteratorConnectHandler) handler,
-        Iterator begin, Iterator end,
-        const ConnectCondition& connect_condition) const
+        basic_socket<Protocol, Executor>* s, Iterator begin,
+        Iterator end, const ConnectCondition& connect_condition) const
     {
       // If you get an error on the following line it means that your
       // handler does not meet the documented type requirements for an
@@ -671,12 +639,9 @@ namespace detail
 
       non_const_lvalue<IteratorConnectHandler> handler2(handler);
       iterator_connect_op<Protocol, Executor, Iterator, ConnectCondition,
-        typename decay<IteratorConnectHandler>::type>(socket_, begin, end,
+        typename decay<IteratorConnectHandler>::type>(*s, begin, end,
           connect_condition, handler2.value)(asio::error_code(), 1);
     }
-
-  private:
-    basic_socket<Protocol, Executor>& socket_;
   };
 } // namespace detail
 
@@ -764,10 +729,9 @@ struct associated_executor<
 
 #endif // !defined(GENERATING_DOCUMENTATION)
 
-template <typename Protocol, typename Executor, typename EndpointSequence,
-    ASIO_COMPLETION_TOKEN_FOR(void (asio::error_code,
-      typename Protocol::endpoint)) RangeConnectHandler>
-inline ASIO_INITFN_AUTO_RESULT_TYPE(RangeConnectHandler,
+template <typename Protocol, typename Executor,
+    typename EndpointSequence, typename RangeConnectHandler>
+inline ASIO_INITFN_RESULT_TYPE(RangeConnectHandler,
     void (asio::error_code, typename Protocol::endpoint))
 async_connect(basic_socket<Protocol, Executor>& s,
     const EndpointSequence& endpoints,
@@ -777,15 +741,14 @@ async_connect(basic_socket<Protocol, Executor>& s,
 {
   return async_initiate<RangeConnectHandler,
     void (asio::error_code, typename Protocol::endpoint)>(
-      detail::initiate_async_range_connect<Protocol, Executor>(s),
-      handler, endpoints, detail::default_connect_condition());
+      detail::initiate_async_range_connect(), handler,
+      &s, endpoints, detail::default_connect_condition());
 }
 
 #if !defined(ASIO_NO_DEPRECATED)
-template <typename Protocol, typename Executor, typename Iterator,
-    ASIO_COMPLETION_TOKEN_FOR(void (asio::error_code,
-      Iterator)) IteratorConnectHandler>
-inline ASIO_INITFN_AUTO_RESULT_TYPE(IteratorConnectHandler,
+template <typename Protocol, typename Executor,
+    typename Iterator, typename IteratorConnectHandler>
+inline ASIO_INITFN_RESULT_TYPE(IteratorConnectHandler,
     void (asio::error_code, Iterator))
 async_connect(basic_socket<Protocol, Executor>& s, Iterator begin,
     ASIO_MOVE_ARG(IteratorConnectHandler) handler,
@@ -793,30 +756,27 @@ async_connect(basic_socket<Protocol, Executor>& s, Iterator begin,
 {
   return async_initiate<IteratorConnectHandler,
     void (asio::error_code, Iterator)>(
-      detail::initiate_async_iterator_connect<Protocol, Executor>(s),
-      handler, begin, Iterator(), detail::default_connect_condition());
+      detail::initiate_async_iterator_connect(), handler,
+      &s, begin, Iterator(), detail::default_connect_condition());
 }
 #endif // !defined(ASIO_NO_DEPRECATED)
 
-template <typename Protocol, typename Executor, typename Iterator,
-    ASIO_COMPLETION_TOKEN_FOR(void (asio::error_code,
-      Iterator)) IteratorConnectHandler>
-inline ASIO_INITFN_AUTO_RESULT_TYPE(IteratorConnectHandler,
+template <typename Protocol, typename Executor,
+    typename Iterator, typename IteratorConnectHandler>
+inline ASIO_INITFN_RESULT_TYPE(IteratorConnectHandler,
     void (asio::error_code, Iterator))
 async_connect(basic_socket<Protocol, Executor>& s, Iterator begin, Iterator end,
     ASIO_MOVE_ARG(IteratorConnectHandler) handler)
 {
   return async_initiate<IteratorConnectHandler,
     void (asio::error_code, Iterator)>(
-      detail::initiate_async_iterator_connect<Protocol, Executor>(s),
-      handler, begin, end, detail::default_connect_condition());
+      detail::initiate_async_iterator_connect(), handler,
+      &s, begin, end, detail::default_connect_condition());
 }
 
-template <typename Protocol, typename Executor,
-    typename EndpointSequence, typename ConnectCondition,
-    ASIO_COMPLETION_TOKEN_FOR(void (asio::error_code,
-      typename Protocol::endpoint)) RangeConnectHandler>
-inline ASIO_INITFN_AUTO_RESULT_TYPE(RangeConnectHandler,
+template <typename Protocol, typename Executor, typename EndpointSequence,
+    typename ConnectCondition, typename RangeConnectHandler>
+inline ASIO_INITFN_RESULT_TYPE(RangeConnectHandler,
     void (asio::error_code, typename Protocol::endpoint))
 async_connect(basic_socket<Protocol, Executor>& s,
     const EndpointSequence& endpoints, ConnectCondition connect_condition,
@@ -826,16 +786,14 @@ async_connect(basic_socket<Protocol, Executor>& s,
 {
   return async_initiate<RangeConnectHandler,
     void (asio::error_code, typename Protocol::endpoint)>(
-      detail::initiate_async_range_connect<Protocol, Executor>(s),
-      handler, endpoints, connect_condition);
+      detail::initiate_async_range_connect(),
+      handler, &s, endpoints, connect_condition);
 }
 
 #if !defined(ASIO_NO_DEPRECATED)
-template <typename Protocol, typename Executor,
-    typename Iterator, typename ConnectCondition,
-    ASIO_COMPLETION_TOKEN_FOR(void (asio::error_code,
-      Iterator)) IteratorConnectHandler>
-inline ASIO_INITFN_AUTO_RESULT_TYPE(IteratorConnectHandler,
+template <typename Protocol, typename Executor, typename Iterator,
+    typename ConnectCondition, typename IteratorConnectHandler>
+inline ASIO_INITFN_RESULT_TYPE(IteratorConnectHandler,
     void (asio::error_code, Iterator))
 async_connect(basic_socket<Protocol, Executor>& s, Iterator begin,
     ConnectCondition connect_condition,
@@ -844,16 +802,14 @@ async_connect(basic_socket<Protocol, Executor>& s, Iterator begin,
 {
   return async_initiate<IteratorConnectHandler,
     void (asio::error_code, Iterator)>(
-      detail::initiate_async_iterator_connect<Protocol, Executor>(s),
-      handler, begin, Iterator(), connect_condition);
+      detail::initiate_async_iterator_connect(),
+      handler, &s, begin, Iterator(), connect_condition);
 }
 #endif // !defined(ASIO_NO_DEPRECATED)
 
-template <typename Protocol, typename Executor,
-    typename Iterator, typename ConnectCondition,
-    ASIO_COMPLETION_TOKEN_FOR(void (asio::error_code,
-      Iterator)) IteratorConnectHandler>
-inline ASIO_INITFN_AUTO_RESULT_TYPE(IteratorConnectHandler,
+template <typename Protocol, typename Executor, typename Iterator,
+    typename ConnectCondition, typename IteratorConnectHandler>
+inline ASIO_INITFN_RESULT_TYPE(IteratorConnectHandler,
     void (asio::error_code, Iterator))
 async_connect(basic_socket<Protocol, Executor>& s, Iterator begin,
     Iterator end, ConnectCondition connect_condition,
@@ -861,8 +817,8 @@ async_connect(basic_socket<Protocol, Executor>& s, Iterator begin,
 {
   return async_initiate<IteratorConnectHandler,
     void (asio::error_code, Iterator)>(
-      detail::initiate_async_iterator_connect<Protocol, Executor>(s),
-      handler, begin, end, connect_condition);
+      detail::initiate_async_iterator_connect(),
+      handler, &s, begin, end, connect_condition);
 }
 
 } // namespace asio

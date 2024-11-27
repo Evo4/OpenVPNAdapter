@@ -4,7 +4,7 @@
 //               packet encryption, packet authentication, and
 //               packet compression.
 //
-//    Copyright (C) 2012-2020 OpenVPN Inc.
+//    Copyright (C) 2012-2017 OpenVPN Inc.
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License Version 3
@@ -48,9 +48,13 @@ namespace openvpn {
 	MAX_HMAC_SIZE = EVP_MAX_MD_SIZE
       };
 
-      HMACContext() = default;
+      HMACContext()
+	: initialized(false)
+      {
+      }
 
       HMACContext(const CryptoAlgs::Type digest, const unsigned char *key, const size_t key_size)
+	: initialized(false)
       {
 	init(digest, key, key_size);
       }
@@ -64,10 +68,9 @@ namespace openvpn {
 	if (!HMAC_Init_ex (ctx, key, int(key_size), DigestContext::digest_type(digest), nullptr))
 	  {
 	    openssl_clear_error_stack();
-	    HMAC_CTX_free(ctx);
-	    ctx = nullptr;
 	    throw openssl_hmac_error("HMAC_Init_ex (init)");
 	  }
+	initialized = true;
       }
 
       void reset()
@@ -109,13 +112,18 @@ namespace openvpn {
 	return size_();
       }
 
-      bool is_initialized() const { return ctx != nullptr; }
+      bool is_initialized() const { return initialized; }
 
     private:
       void erase()
       {
-	  HMAC_CTX_free(ctx);
-	  ctx = nullptr;
+	if (initialized)
+	  {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#endif
+	    HMAC_CTX_free(ctx);
+	    initialized = false;
+	  }
       }
 
       size_t size_() const
@@ -126,12 +134,13 @@ namespace openvpn {
       void check_initialized() const
       {
 #ifdef OPENVPN_ENABLE_ASSERT
-	if (!ctx)
+	if (!initialized)
 	  throw openssl_hmac_uninitialized();
 #endif
       }
 
-      HMAC_CTX* ctx = nullptr;
+      bool initialized;
+      HMAC_CTX* ctx;
     };
   }
 }

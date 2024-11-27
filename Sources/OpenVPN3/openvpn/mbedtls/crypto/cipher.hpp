@@ -4,7 +4,7 @@
 //               packet encryption, packet authentication, and
 //               packet compression.
 //
-//    Copyright (C) 2012-2020 OpenVPN Inc.
+//    Copyright (C) 2012-2017 OpenVPN Inc.
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License Version 3
@@ -36,52 +36,14 @@
 
 namespace openvpn {
   namespace MbedTLSCrypto {
-    class CipherContextCommon {
-    public:
-      OPENVPN_SIMPLE_EXCEPTION(mbedtls_cipher_mode_error);
-      OPENVPN_SIMPLE_EXCEPTION(mbedtls_cipher_uninitialized);
-
-      // mode parameter for constructor
-      enum {
-	MODE_UNDEF = MBEDTLS_OPERATION_NONE,
-	ENCRYPT = MBEDTLS_ENCRYPT,
-	DECRYPT = MBEDTLS_DECRYPT
-      };
-
-    protected:
-      static void check_mode(int mode)
-      {
-	// check that mode is valid
-	if (!(mode == ENCRYPT || mode == DECRYPT))
-	  throw mbedtls_cipher_mode_error();
-      }
-
-      void erase()
-      {
-	if (initialized)
-	  {
-	    mbedtls_cipher_free(&ctx);
-	    initialized = false;
-	  }
-      }
-
-      void check_initialized() const
-      {
-	if (unlikely(!initialized))
-	  throw mbedtls_cipher_uninitialized();
-      }
-
-      bool initialized = false;
-      mbedtls_cipher_context_t ctx;
-    };
-
     class CipherContext
-      : public CipherContextCommon
     {
       CipherContext(const CipherContext&) = delete;
       CipherContext& operator=(const CipherContext&) = delete;
 
     public:
+      OPENVPN_SIMPLE_EXCEPTION(mbedtls_cipher_mode_error);
+      OPENVPN_SIMPLE_EXCEPTION(mbedtls_cipher_uninitialized);
       OPENVPN_EXCEPTION(mbedtls_cipher_error);
 
       // mode parameter for constructor
@@ -97,7 +59,10 @@ namespace openvpn {
 	CIPH_CBC_MODE = MBEDTLS_MODE_CBC
       };
 
-      CipherContext() = default;
+      CipherContext()
+	: initialized(false)
+      {
+      }
 
       ~CipherContext() { erase() ; }
 
@@ -105,7 +70,9 @@ namespace openvpn {
       {
 	erase();
 
-	check_mode(mode);
+	// check that mode is valid
+	if (!(mode == ENCRYPT || mode == DECRYPT))
+	  throw mbedtls_cipher_mode_error();
 
 	// get cipher type
 	const mbedtls_cipher_info_t *ci = cipher_type(alg);
@@ -202,6 +169,26 @@ namespace openvpn {
 	    OPENVPN_THROW(mbedtls_cipher_error, CryptoAlgs::name(alg) << ": not usable");
 	  }
       }
+
+      void erase()
+      {
+	if (initialized)
+	  {
+	    mbedtls_cipher_free(&ctx);
+	    initialized = false;
+	  }
+      }
+
+      void check_initialized() const
+      {
+#ifdef OPENVPN_ENABLE_ASSERT
+	if (!initialized)
+	  throw mbedtls_cipher_uninitialized();
+#endif
+      }
+
+      bool initialized;
+      mbedtls_cipher_context_t ctx;
     };
   }
 }

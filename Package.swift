@@ -1,12 +1,13 @@
-// swift-tools-version:5.1
+// swift-tools-version: 6.0
+// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "OpenVPNAdapter",
     platforms: [
-        .iOS("9.0"),
-        .macOS("10.11"),
+        .iOS(.v15),
+        .macOS(.v10_13)
     ],
     products: [
         .library(name: "OpenVPNAdapter", type: .static, targets: ["OpenVPNAdapter"]),
@@ -33,7 +34,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "mbedTLS", 
+            name: "mbedTLS",
             sources: ["library"],
             cSettings: [
                 .define("MBEDTLS_MD4_C"),
@@ -63,5 +64,6 @@ let package = Package(
             ]
         )
     ],
+    swiftLanguageModes: [.v5],
     cxxLanguageStandard: .gnucxx14
 )

@@ -4,7 +4,7 @@
 //               packet encryption, packet authentication, and
 //               packet compression.
 //
-//    Copyright (C) 2012-2020 OpenVPN Inc.
+//    Copyright (C) 2012-2017 OpenVPN Inc.
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License Version 3
@@ -62,24 +62,27 @@ namespace openvpn {
 	CIPH_CBC_MODE = EVP_CIPH_CBC_MODE
       };
 
-      CipherContext() = default;
+      CipherContext()
+	: initialized(false)
+      {
+      }
 
-      ~CipherContext() { free_cipher_context() ; }
+      ~CipherContext() { erase() ; }
 
       void init(const CryptoAlgs::Type alg, const unsigned char *key, const int mode)
       {
 	// check that mode is valid
 	if (!(mode == ENCRYPT || mode == DECRYPT))
 	  throw openssl_cipher_mode_error();
-	free_cipher_context();
-	ctx = EVP_CIPHER_CTX_new();
+	erase();
+	ctx = EVP_CIPHER_CTX_new ();
 	EVP_CIPHER_CTX_reset (ctx);
 	if (!EVP_CipherInit_ex (ctx, cipher_type(alg), nullptr, key, nullptr, mode))
 	  {
 	    openssl_clear_error_stack();
-	    free_cipher_context();
 	    throw openssl_cipher_error("EVP_CipherInit_ex (init)");
 	  }
+	initialized = true;
       }
 
       void reset(const unsigned char *iv)
@@ -126,7 +129,7 @@ namespace openvpn {
 	  }
       }
 
-      bool is_initialized() const { return ctx != nullptr; }
+      bool is_initialized() const { return initialized; }
 
       size_t iv_length() const
       {
@@ -171,21 +174,25 @@ namespace openvpn {
 	  }
       }
 
-      void free_cipher_context()
+      void erase()
       {
-	EVP_CIPHER_CTX_free(ctx);
-	ctx = nullptr;
+	if (initialized)
+	  {
+	    EVP_CIPHER_CTX_free (ctx);
+	    initialized = false;
+	  }
       }
 
       void check_initialized() const
       {
 #ifdef OPENVPN_ENABLE_ASSERT
-	if (ctx == nullptr)
+	if (!initialized)
 	  throw openssl_cipher_uninitialized();
 #endif
       }
 
-      EVP_CIPHER_CTX* ctx = nullptr;
+      bool initialized;
+      EVP_CIPHER_CTX* ctx;
     };
   }
 }

@@ -4,7 +4,7 @@
 //               packet encryption, packet authentication, and
 //               packet compression.
 //
-//    Copyright (C) 2012-2020 OpenVPN Inc.
+//    Copyright (C) 2012-2017 OpenVPN Inc.
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License Version 3
@@ -93,31 +93,13 @@ namespace openvpn {
     };
 
     BufferException(Status status)
-      : status_(status)
-    {
-    }
-
-    BufferException(Status status, const std::string& msg)
-      : status_(status),
-	msg_(std::string(status_string(status)) + " : " + msg)
-    {
-    }
-
-    virtual const char* what() const throw()
-    {
-      if (!msg_.empty())
-	return msg_.c_str();
-      else
-	return status_string(status_);
-    }
+      : status_(status) {}
 
     Status status() const { return status_; }
-    virtual ~BufferException() throw() {}
 
-  private:
-    static const char *status_string(const Status status)
+    const char *status_string() const
     {
-      switch (status)
+      switch (status_)
 	{
 	case buffer_full:
 	  return "buffer_full";
@@ -148,8 +130,13 @@ namespace openvpn {
 	}
     }
 
+    virtual const char* what() const throw() {
+      return status_string();
+    }
+    virtual ~BufferException() throw() {}
+
+  private:
     Status status_;
-    std::string msg_;
   };
 
   template <typename T, typename R>
@@ -170,11 +157,6 @@ namespace openvpn {
       static_assert(std::is_nothrow_move_constructible<BufferType>::value, "class BufferType not noexcept move constructable");
       data_ = nullptr;
       offset_ = size_ = capacity_ = 0;
-    }
-
-    BufferType(void* data, const size_t size, const bool filled)
-      : BufferType((T*)data, size, filled)
-    {
     }
 
     BufferType(T* data, const size_t size, const bool filled)
@@ -327,12 +309,12 @@ namespace openvpn {
       return ret;
     }
 
-    T front() const
+    T front()
     {
       return (*this)[0];
     }
 
-    T back() const
+    T back()
     {
       return (*this)[size_-1];
     }
@@ -615,16 +597,9 @@ namespace openvpn {
     virtual void resize(const size_t new_capacity)
     {
       if (new_capacity > capacity_)
-	buffer_full_error(new_capacity, false);
-    }
-
-    void buffer_full_error(const size_t newcap, const bool allocated) const
-    {
-#ifdef OPENVPN_BUFFER_ABORT
-      std::abort();
-#else
-      throw BufferException(BufferException::buffer_full, "allocated=" + std::to_string(allocated) + " size=" + std::to_string(size_) + " offset=" + std::to_string(offset_) + " capacity=" + std::to_string(capacity_) + " newcap=" + std::to_string(newcap));
-#endif
+	{
+	  OPENVPN_BUFFER_THROW(buffer_full);
+	}
     }
 
     T* data_;          // pointer to data
@@ -640,7 +615,6 @@ namespace openvpn {
     using BufferType<T>::offset_;
     using BufferType<T>::size_;
     using BufferType<T>::capacity_;
-    using BufferType<T>::buffer_full_error;
 
     template <typename, typename> friend class BufferAllocatedType;
 
@@ -860,7 +834,7 @@ namespace openvpn {
 	  if (flags_ & GROW)
 	    realloc_(newcap);
 	  else
-	    buffer_full_error(newcap, true);
+	    OPENVPN_BUFFER_THROW(buffer_full);
 	}
     }
 
