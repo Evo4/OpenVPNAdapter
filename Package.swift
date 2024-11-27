@@ -10,7 +10,7 @@ let package = Package(
         .macOS(.v10_13)
     ],
     products: [
-        .library(name: "OpenVPNAdapter", targets: ["OpenVPNAdapter"]),
+        .library(name: "OpenVPNAdapter", type: .static, targets: ["OpenVPNAdapter"]),
     ],
     targets: [
         .target(
