@@ -60,6 +60,10 @@
 		C97E5FEC24124B73005C2EBC /* mbedTLS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "OpenVPNAdapter::mbedTLS::Product" /* mbedTLS.framework */; };
 		C9EABF3124110BE200D828D4 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9EABF3024110BE200D828D4 /* SystemConfiguration.framework */; };
 		C9EABF772411215C00D828D4 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9EABF642411189800D828D4 /* UIKit.framework */; platformFilter = ios; };
+		EDC86AE92516F50000504FFA /* OpenVPNDhcpOptionEntry.h in Headers */ = {isa = PBXBuildFile; fileRef = EDC86AE62516F50000504FFA /* OpenVPNDhcpOptionEntry.h */; };
+		EDC86AEA2516F50000504FFA /* OpenVPNDhcpOptionEntry.mm in Sources */ = {isa = PBXBuildFile; fileRef = EDC86AE72516F50000504FFA /* OpenVPNDhcpOptionEntry.mm */; };
+		EDC86AEB2516F50000504FFA /* OpenVPNDhcpOptionEntry+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = EDC86AE82516F50000504FFA /* OpenVPNDhcpOptionEntry+Internal.h */; };
+		EDC86AF22516F52300504FFA /* OpenVPNDhcpOptionEntry.h in Headers */ = {isa = PBXBuildFile; fileRef = EDC86AF12516F52300504FFA /* OpenVPNDhcpOptionEntry.h */; };
 		OBJ_250 /* lz4.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* lz4.c */; };
 		OBJ_251 /* lz4frame.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* lz4frame.c */; };
 		OBJ_252 /* lz4hc.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* lz4hc.c */; };
@@ -289,6 +293,10 @@
 		C9EABF7424111D6100D828D4 /* OpenVPNAdapter.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = OpenVPNAdapter.xcconfig; sourceTree = "<group>"; };
 		C9EABF7524111E9C00D828D4 /* LZ4.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LZ4.xcconfig; sourceTree = "<group>"; };
 		C9EABF7624111F1600D828D4 /* mbedTLS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = mbedTLS.xcconfig; sourceTree = "<group>"; };
+		EDC86AE62516F50000504FFA /* OpenVPNDhcpOptionEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenVPNDhcpOptionEntry.h; sourceTree = "<group>"; };
+		EDC86AE72516F50000504FFA /* OpenVPNDhcpOptionEntry.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OpenVPNDhcpOptionEntry.mm; sourceTree = "<group>"; };
+		EDC86AE82516F50000504FFA /* OpenVPNDhcpOptionEntry+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OpenVPNDhcpOptionEntry+Internal.h"; sourceTree = "<group>"; };
+		EDC86AF12516F52300504FFA /* OpenVPNDhcpOptionEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenVPNDhcpOptionEntry.h; sourceTree = "<group>"; };
 		OBJ_100 /* debug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = debug.c; sourceTree = "<group>"; };
 		OBJ_101 /* des.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = des.c; sourceTree = "<group>"; };
 		OBJ_102 /* dhm.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = dhm.c; sourceTree = "<group>"; };
@@ -724,6 +732,9 @@
 		OBJ_27 /* library */ = {
 			isa = PBXGroup;
 			children = (
+				EDC86AE62516F50000504FFA /* OpenVPNDhcpOptionEntry.h */,
+				EDC86AE72516F50000504FFA /* OpenVPNDhcpOptionEntry.mm */,
+				EDC86AE82516F50000504FFA /* OpenVPNDhcpOptionEntry+Internal.h */,
 				C97E5F752412300A005C2EBC /* OpenVPNAdapterEvent.h */,
 				C97E5F7724123019005C2EBC /* OpenVPNAdapterPacketFlow.h */,
 				C97E5F7B24123036005C2EBC /* OpenVPNCompressionMode.h */,
@@ -789,6 +800,7 @@
 		OBJ_48 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				EDC86AF12516F52300504FFA /* OpenVPNDhcpOptionEntry.h */,
 				OBJ_49 /* OpenVPNCompressionMode.h */,
 				OBJ_50 /* OpenVPNKeyType.h */,
 				OBJ_51 /* OpenVPNAdapterEvent.h */,
@@ -996,6 +1008,7 @@
 				C97E5F9E2412314A005C2EBC /* OpenVPNConfigurationEvaluation.h in Headers */,
 				C97E5FA62412317B005C2EBC /* OpenVPNReachabilityStatus.h in Headers */,
 				OBJ_287 /* OpenVPNPrivateKey.h in Headers */,
+				EDC86AEB2516F50000504FFA /* OpenVPNDhcpOptionEntry+Internal.h in Headers */,
 				C97E5F7424122FE6005C2EBC /* OpenVPNAdapter.h in Headers */,
 				OBJ_288 /* OpenVPNInterfaceStats.h in Headers */,
 				OBJ_290 /* OpenVPNReachability.h in Headers */,
@@ -1012,6 +1025,7 @@
 				OBJ_293 /* OpenVPNMinTLSVersion.h in Headers */,
 				C97E5F7224122F5C005C2EBC /* OpenVPNClient.h in Headers */,
 				OBJ_294 /* OpenVPNAdapter.h in Headers */,
+				EDC86AE92516F50000504FFA /* OpenVPNDhcpOptionEntry.h in Headers */,
 				OBJ_295 /* OpenVPNConnectionInfo.h in Headers */,
 				OBJ_296 /* OpenVPNReachabilityStatus.h in Headers */,
 				C97E5F822412305C005C2EBC /* OpenVPNConnectionInfo.h in Headers */,
@@ -1030,6 +1044,7 @@
 				C910EAE724EBB5210081AF13 /* OpenVPNConfigurationEvaluation.h in Headers */,
 				C97E5FAC241231AA005C2EBC /* OpenVPNServerEntry+Internal.h in Headers */,
 				C97E5F90241230B3005C2EBC /* OpenVPNIPv6Preference.h in Headers */,
+				EDC86AF22516F52300504FFA /* OpenVPNDhcpOptionEntry.h in Headers */,
 				C97E5FE624124B0E005C2EBC /* Umbrella-Header.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1215,6 +1230,7 @@
 				OBJ_269 /* OpenVPNInterfaceStats.mm in Sources */,
 				OBJ_270 /* OpenVPNNetworkSettingsBuilder.m in Sources */,
 				OBJ_271 /* OpenVPNPacket.mm in Sources */,
+				EDC86AEA2516F50000504FFA /* OpenVPNDhcpOptionEntry.mm in Sources */,
 				OBJ_272 /* OpenVPNPacketFlowBridge.mm in Sources */,
 				OBJ_273 /* OpenVPNPrivateKey.m in Sources */,
 				OBJ_274 /* OpenVPNConfigurationEvaluation.mm in Sources */,
