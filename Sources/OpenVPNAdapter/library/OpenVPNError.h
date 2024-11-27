@@ -86,7 +86,6 @@ typedef NS_ERROR_ENUM(OpenVPNAdapterErrorDomain, OpenVPNAdapterError) {
     OpenVPNAdapterErrorKevNegotiateError,
     OpenVPNAdapterErrorKevPendingError,
     OpenVPNAdapterErrorKevExpireNumber,
-    OpenVPNAdapterErrorKeyExpansionError,
     OpenVPNAdapterErrorPKTIDInvalid,
     OpenVPNAdapterErrorPKTIDBacktrack,
     OpenVPNAdapterErrorPKTIDExpire,

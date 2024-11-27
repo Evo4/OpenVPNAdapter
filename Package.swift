@@ -34,7 +34,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "mbedTLS", 
+            name: "mbedTLS",
             sources: ["library"],
             cSettings: [
                 .define("MBEDTLS_MD4_C"),

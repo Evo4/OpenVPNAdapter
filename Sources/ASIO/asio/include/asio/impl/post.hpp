@@ -25,9 +25,8 @@
 namespace asio {
 namespace detail {
 
-class initiate_post
+struct initiate_post
 {
-public:
   template <typename CompletionHandler>
   void operator()(ASIO_MOVE_ARG(CompletionHandler) handler) const
   {
@@ -41,63 +40,42 @@ public:
 
     ex.post(ASIO_MOVE_CAST(CompletionHandler)(handler), alloc);
   }
-};
 
-template <typename Executor>
-class initiate_post_with_executor
-{
-public:
-  typedef Executor executor_type;
-
-  explicit initiate_post_with_executor(const Executor& ex)
-    : ex_(ex)
-  {
-  }
-
-  executor_type get_executor() const ASIO_NOEXCEPT
-  {
-    return ex_;
-  }
-
-  template <typename CompletionHandler>
-  void operator()(ASIO_MOVE_ARG(CompletionHandler) handler) const
+  template <typename CompletionHandler, typename Executor>
+  void operator()(ASIO_MOVE_ARG(CompletionHandler) handler,
+      ASIO_MOVE_ARG(Executor) ex) const
   {
     typedef typename decay<CompletionHandler>::type DecayedHandler;
 
     typename associated_allocator<DecayedHandler>::type alloc(
         (get_associated_allocator)(handler));
 
-    ex_.post(detail::work_dispatcher<DecayedHandler>(
+    ex.post(detail::work_dispatcher<DecayedHandler>(
           ASIO_MOVE_CAST(CompletionHandler)(handler)), alloc);
   }
-
-private:
-  Executor ex_;
 };
 
 } // namespace detail
 
-template <ASIO_COMPLETION_TOKEN_FOR(void()) CompletionToken>
-ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) post(
+template <typename CompletionToken>
+ASIO_INITFN_RESULT_TYPE(CompletionToken, void()) post(
     ASIO_MOVE_ARG(CompletionToken) token)
 {
   return async_initiate<CompletionToken, void()>(
       detail::initiate_post(), token);
 }
 
-template <typename Executor,
-    ASIO_COMPLETION_TOKEN_FOR(void()) CompletionToken>
-ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) post(
+template <typename Executor, typename CompletionToken>
+ASIO_INITFN_RESULT_TYPE(CompletionToken, void()) post(
     const Executor& ex, ASIO_MOVE_ARG(CompletionToken) token,
     typename enable_if<is_executor<Executor>::value>::type*)
 {
   return async_initiate<CompletionToken, void()>(
-      detail::initiate_post_with_executor<Executor>(ex), token);
+      detail::initiate_post(), token, ex);
 }
 
-template <typename ExecutionContext,
-    ASIO_COMPLETION_TOKEN_FOR(void()) CompletionToken>
-inline ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) post(
+template <typename ExecutionContext, typename CompletionToken>
+inline ASIO_INITFN_RESULT_TYPE(CompletionToken, void()) post(
     ExecutionContext& ctx, ASIO_MOVE_ARG(CompletionToken) token,
     typename enable_if<is_convertible<
       ExecutionContext&, execution_context&>::value>::type*)

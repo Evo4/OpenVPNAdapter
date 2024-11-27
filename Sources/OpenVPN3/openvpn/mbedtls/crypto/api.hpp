@@ -4,7 +4,7 @@
 //               packet encryption, packet authentication, and
 //               packet compression.
 //
-//    Copyright (C) 2012-2020 OpenVPN Inc.
+//    Copyright (C) 2012-2017 OpenVPN Inc.
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License Version 3
@@ -23,7 +23,7 @@
 #define OPENVPN_MBEDTLS_CRYPTO_API_H
 
 #include <openvpn/mbedtls/crypto/cipher.hpp>
-#include <openvpn/mbedtls/crypto/cipheraead.hpp>
+#include <openvpn/mbedtls/crypto/ciphergcm.hpp>
 #include <openvpn/mbedtls/crypto/digest.hpp>
 #include <openvpn/mbedtls/crypto/hmac.hpp>
 
@@ -33,7 +33,7 @@ namespace openvpn {
   struct MbedTLSCryptoAPI {
     // cipher
     typedef MbedTLSCrypto::CipherContext CipherContext;
-    typedef MbedTLSCrypto::CipherContextAEAD CipherContextAEAD;
+    typedef MbedTLSCrypto::CipherContextGCM CipherContextGCM;
 
     // digest
     typedef MbedTLSCrypto::DigestContext DigestContext;

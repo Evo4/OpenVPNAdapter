@@ -49,8 +49,8 @@ namespace asio {
  *
  * @li Returns <tt>result.get()</tt>.
  */
-template <ASIO_COMPLETION_TOKEN_FOR(void()) CompletionToken>
-ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) dispatch(
+template <typename CompletionToken>
+ASIO_INITFN_RESULT_TYPE(CompletionToken, void()) dispatch(
     ASIO_MOVE_ARG(CompletionToken) token);
 
 /// Submits a completion token or function object for execution.
@@ -83,13 +83,9 @@ ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) dispatch(
  *
  * @li Returns <tt>result.get()</tt>.
  */
-template <typename Executor,
-    ASIO_COMPLETION_TOKEN_FOR(void()) CompletionToken
-      ASIO_DEFAULT_COMPLETION_TOKEN_TYPE(Executor)>
-ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) dispatch(
-    const Executor& ex,
-    ASIO_MOVE_ARG(CompletionToken) token
-      ASIO_DEFAULT_COMPLETION_TOKEN(Executor),
+template <typename Executor, typename CompletionToken>
+ASIO_INITFN_RESULT_TYPE(CompletionToken, void()) dispatch(
+    const Executor& ex, ASIO_MOVE_ARG(CompletionToken) token,
     typename enable_if<is_executor<Executor>::value>::type* = 0);
 
 /// Submits a completion token or function object for execution.
@@ -97,15 +93,9 @@ ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) dispatch(
  * @returns <tt>dispatch(ctx.get_executor(),
  * forward<CompletionToken>(token))</tt>.
  */
-template <typename ExecutionContext,
-    ASIO_COMPLETION_TOKEN_FOR(void()) CompletionToken
-      ASIO_DEFAULT_COMPLETION_TOKEN_TYPE(
-        typename ExecutionContext::executor_type)>
-ASIO_INITFN_AUTO_RESULT_TYPE(CompletionToken, void()) dispatch(
-    ExecutionContext& ctx,
-    ASIO_MOVE_ARG(CompletionToken) token
-      ASIO_DEFAULT_COMPLETION_TOKEN(
-        typename ExecutionContext::executor_type),
+template <typename ExecutionContext, typename CompletionToken>
+ASIO_INITFN_RESULT_TYPE(CompletionToken, void()) dispatch(
+    ExecutionContext& ctx, ASIO_MOVE_ARG(CompletionToken) token,
     typename enable_if<is_convertible<
       ExecutionContext&, execution_context&>::value>::type* = 0);
 
