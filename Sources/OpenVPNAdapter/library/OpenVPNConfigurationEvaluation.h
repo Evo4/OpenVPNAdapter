@@ -10,7 +10,6 @@
 
 typedef NS_ENUM(NSInteger, OpenVPNTransportProtocol);
 @class OpenVPNServerEntry;
-@class OpenVPNDhcpOptionEntry; //Added by Dener Araújo - 2020-09-06
 
 @interface OpenVPNConfigurationEvaluation : NSObject
 
@@ -78,12 +77,6 @@ typedef NS_ENUM(NSInteger, OpenVPNTransportProtocol);
  Optional list of user-selectable VPN servers
  */
 @property (nullable, readonly, nonatomic) NSArray<OpenVPNServerEntry *> *servers;
-
-/**
- Added by Dener Araújo - 2020-09-06
- Optional list of "dhcp-option"
-*/
-@property (nullable, readonly, nonatomic) NSArray<OpenVPNDhcpOptionEntry *> *dhcpOptions;
 
 - (nonnull instancetype) init NS_UNAVAILABLE;
 

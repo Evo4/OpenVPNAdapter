@@ -262,7 +262,7 @@ int mbedtls_entropy_update_manual( mbedtls_entropy_context *ctx,
  */
 static int entropy_gather_internal( mbedtls_entropy_context *ctx )
 {
-    int ret = 0, i, have_one_strong = 0; // Updated by Dener Araújo - 2020-09-06
+    int ret, i, have_one_strong = 0;
     unsigned char buf[MBEDTLS_ENTROPY_MAX_GATHER];
     size_t olen;
 
