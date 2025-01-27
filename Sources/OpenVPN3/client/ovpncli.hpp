@@ -47,6 +47,15 @@ namespace openvpn {
       std::string friendlyName;
     };
 
+    // Added by Dener Araújo - 2020-09-06
+    // Represents an "dhcp-option" with its type (DNS, WINS, etc) and its address
+    // (client reads)
+    struct DhcpOptionEntry
+    {
+      std::string type;
+      std::string address;
+    };
+
     // return properties of config
     // (client reads)
     struct EvalConfig
@@ -94,6 +103,11 @@ namespace openvpn {
 
       // optional, values are "tap-windows6" and "wintun"
       std::string windowsDriver;
+
+
+      // Added by Dener Araújo - 2020-09-06
+      // optional list of "dhcp-option"
+      std::vector<DhcpOptionEntry> dhcpOptionList;
     };
 
     // used to pass credentials to VPN core
